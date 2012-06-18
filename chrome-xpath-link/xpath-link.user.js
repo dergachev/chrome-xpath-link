@@ -4,7 +4,8 @@ chrome.extension.onRequest.addListener ( function(request, sender, sendResponse)
   if (request.name == "xpath-link_contextMenuClick") {
     var xpathLink = window.location.href.replace(/#.*$/,'') + "#xpath:" + encodeXPath(contextMenuElementXPath);
     //prompt("Link to XPath. (copy)",contextMenuElementXPath, "C","D");
-    prompt("Link to XPath. (copy)", xpathLink);
+    //prompt("Press Ctrl-C or Cmd-C to copy the following link:\n" + xpathLink, xpathLink);
+    window.location = xpathLink;
   }
 });
 
@@ -25,7 +26,7 @@ function decodeXPath(xpath) {
 var onContextMenu = function(event)
 {
     contextMenuElementXPath = getElementXPath(event.target);
-    console.log(contextMenuElementXPath);
+    //console.log(contextMenuElementXPath);
 };
 window.addEventListener("contextmenu", onContextMenu);
 
@@ -49,6 +50,12 @@ var getElementTreeXPath = function(element)
     {
         var index = 0;
         var nodeName = element.nodeName;
+
+        if (element.id) {
+          var tagName = element.nodeName.toLowerCase();
+          paths.splice(0, 0, tagName + '[@id="' + element.id + '"]');
+          return "//" + paths.join("/");
+        }
 
         for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling)
         {
