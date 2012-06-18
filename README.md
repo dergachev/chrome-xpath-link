@@ -9,3 +9,14 @@ Generally the paths will be of the following form:
 http://en.wikipedia.org/wiki/Markdown#xpath:/html/body/div-3/div-3/div-4/p-4
 
 Upon visiting a URL that directly links to the element, this extension will highlight and scroll down to the element.
+
+Installation
+------------
+To use the plugin, simply download this CRX package file: 
+  https://github.com/dergachev/chrome-xpath-link/blob/master/chrome-xpath-link.crx?raw=true
+Note that it may be out of date relative to the source.
+
+Inspiration
+-----------
+XPath code shamelessly copied from the Firebug Lite chrome extension: http://getfirebug.com/firebuglite#Debug
+My Chrome extension development was greatly aided by this tool: https://github.com/Rob--W/Chrome-Extension-Reloader
