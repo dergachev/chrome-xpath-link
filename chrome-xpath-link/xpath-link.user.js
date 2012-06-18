@@ -2,26 +2,12 @@ var contextMenuElementXPath;
 
 chrome.extension.onRequest.addListener ( function(request, sender, sendResponse) {
   if (request.name == "xpath-link_contextMenuClick") {
-    var xpathLink = window.location.href.replace(/#.*$/,'') + "#xpath:" + encodeXPath(contextMenuElementXPath);
+    var xpathLink = window.location.href.replace(/#.*$/,'') + "#" + encodeXPath(contextMenuElementXPath);
     //prompt("Link to XPath. (copy)",contextMenuElementXPath, "C","D");
     //prompt("Press Ctrl-C or Cmd-C to copy the following link:\n" + xpathLink, xpathLink);
     window.location = xpathLink;
   }
 });
-
-function encodeXPath(xpath) { 
-  
-  xpath = xpath.replace(/\[(\d+)\]/g, "-$1");
-  console.log("Xpath encoded: " + xpath);
-  //xpath = encodeURIComponent(xpath);
-  return xpath;
-}
-function decodeXPath(xpath) { 
-  //xpath = decodeURIComponent(xpath);
-  xpath = xpath.replace(/-(\d+)(\/|$)/g, '[$1]$2');
-  console.log("Xpath decoded: " + xpath);
-  return xpath;
-}
 
 var onContextMenu = function(event)
 {
@@ -35,15 +21,7 @@ window.addEventListener("contextmenu", onContextMenu);
  * Gets XPATH string representation for given DOM element, stolen from firebug_lite.
  * example: /html/body/div[2]/div[3]/div[4]/div/div[2]/div/div/div/div/div/div[2]/p
  */
-var getElementXPath = function(element)
-{
-    if (element && element.id)
-        return '//*[@id="' + element.id + '"]';
-    else
-        return this.getElementTreeXPath(element);
-};
-var getElementTreeXPath = function(element)
-{
+var getElementXPath = function(element) {
     var paths = [];
 
     for (; element && element.nodeType == 1; element = element.parentNode)
@@ -53,7 +31,7 @@ var getElementTreeXPath = function(element)
 
         if (element.id) {
           var tagName = element.nodeName.toLowerCase();
-          paths.splice(0, 0, tagName + '[@id="' + element.id + '"]');
+          paths.splice(0, 0, '*[@id="' + element.id + '"]');
           return "//" + paths.join("/");
         }
 
@@ -73,9 +51,6 @@ var getElementTreeXPath = function(element)
     return paths.length ? "/" + paths.join("/") : null;
 };
 
-window.onhashchange = function() {
-  jumpToXPathInUrl();
-}
 
 /*
  * Checks if the URL matches the following pattern:
@@ -85,10 +60,15 @@ window.onhashchange = function() {
  */
 function jumpToXPathInUrl() {
 
-  if(location.hash && location.hash.match(/^#xpath:/)) { 
-    var xpath = location.hash.replace(/^#xpath:/,'') ; 
-    xpath = decodeXPath(xpath);
+  if(location.hash) { 
+    var xpath = decodeXPath(location.hash.replace(/^#/, ''));
     var elem = jQuery.xpath(xpath);
+
+    if (elem.length == 0) {
+      console.log("empty");
+      return;
+    }
+    console.log(xpath);
 
     //deal with text nodes
     if(elem.get(0).nodeType == 3 ) { 
@@ -107,6 +87,34 @@ function jumpToXPathInUrl() {
   } 
 
 };
+
+window.onhashchange = function() {
+  jumpToXPathInUrl();
+}
+
+function encodeXPath(xpath) { 
+  
+  // replace div[4]/a[3] with div-4/a-3
+  xpath = xpath.replace(/\[(\d+)\]/g, "-$1");
+  //replace //*[@id="dom-id"]/a[3] with #dom-id/a[3]
+  xpath = xpath.replace(/^\/\/\*\[@id="([a-zA-Z0-9_-]+)"\]/, "$1");
+
+  //console.log("Xpath encoded: " + xpath);
+  //xpath = encodeURIComponent(xpath);
+  return xpath;
+}
+function decodeXPath(xpath) { 
+  //xpath = decodeURIComponent(xpath);
+  
+  //replace beginning 'element-id/div-3' with '//*[@id="element-id"]/div-3
+  xpath = xpath.replace(/^([a-zA-Z0-9_-]+)/, '//*[@id="$1"]');
+  
+  // replace div-4/a-3 with div[4]/a[3]
+  xpath = xpath.replace(/-(\d+)(\/|$)/g, '[$1]$2');
+  // console.log("Xpath decoded: " + xpath);
+  return xpath;
+}
+
 
   
 /*
